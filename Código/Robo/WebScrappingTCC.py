@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# ## Implementação de um robô para webscrapping
-# ### Autor: Renato Druzian
+# Implementação de um robô para webscrapping
+# Autor: Renato Druzian
 # 
-# #### Este robô será utilizado para buscar notícias no site do G1 e com isso montaremos um dataset que iremos utilizar no TCC para sumarizar notícias
+# Este robô será utilizado para buscar notícias no site do G1 e com isso montaremos um dataset que iremos utilizar no TCC para sumarizar notícias
 # 1160 paginas 11025 noticias
 # 1161 - 1327 paginas ~1660 noticias
 # 1328 - 1532 paginas 1740 noticias
@@ -12,21 +12,15 @@
 # 1595 - 2998 páginas 13380
 # 2999 - 3000 paginas 20
 # Total = 3000 páginas ~28000 noticias
-# ## Importação das libs utilizadas para implementação do webscrapping
+# Importação das libs utilizadas para implementação do webscrapping
 from urllib.request import urlopen
 from urllib.error import HTTPError
 from urllib.error import URLError
 from bs4 import BeautifulSoup
-import time
-import re
 import json
 
-
 # Inicialização de variáveis
-data = {}
-data['noticias'] = []
-d = {}
-d['noticia'] = []
+data=[]
 
 count = 0
 c = 1
@@ -42,8 +36,10 @@ def urls(url):
     try:
         html = urlopen(url)
     except HTTPError as e:
+        urls(url)
         print(e)
     except URLError:
+        urls(url)
         print("Server down or incorrect domain")
     else:
         return html
@@ -53,12 +49,12 @@ def urls(url):
 # Aqui é separado o título da notícia, a categoria e o texto. São feitas alguma verificações 
 # para não ir dados nulos e por fim guardado na variável que será criado o json
 def pegaInfos(titulos, count, categoria, noticia):
-    data['noticias'] = []
+    data= []
     for tag in titulos:
         manchete = ""
         noticia = ""
         noti = ""
-        ##Pega a url da noticia na pagina prinicpal
+        #Pega a url da noticia na pagina prinicpal
         manchete = tag.getText()
         url = tag.get("href")
         if url != "" and type(url) is str:
@@ -80,7 +76,7 @@ def pegaInfos(titulos, count, categoria, noticia):
                     categoria = c.getText()
                 
                 if noticia != "":
-                    data['noticias'].append([{'título': manchete, 'categoria': categoria, 'texto': noticia}])
+                    data.append({'título': manchete, 'categoria': categoria, 'texto': noticia})
                     count = count + 1
             else:
                 break
@@ -89,21 +85,21 @@ def pegaInfos(titulos, count, categoria, noticia):
     return data, count
 
 
-# #### Loop para criar as URLs e realizar a busca das notícias, será necessário no minímo 15000 notícias
-while(c <= 30):
+# Loop para criar as URLs e realizar a busca das notícias, será necessário no minímo 15000 notícias
+while(c <= 10):
     verMais.append("https://g1.globo.com/index/feed/pagina-" + str(c) + ".ghtml")
     c += 1
 
 def salvaJson(data, count):
     print("Salvando...")
-    # #### Por fim é criado o json utlizando o encoder UTF-8 para reconhecer a gramática PT-BR 
-    with open('C:\\Users\\renat\\TCC\\Código\\robo\\tcc1.json', 'a+', encoding='utf8') as outfile:
+    # Por fim é criado o json utlizando o encoder UTF-8 para reconhecer a gramática PT-BR 
+    with open('C:\\Users\\renat\\Desktop\\tcc2.json', 'a+', encoding='utf8') as outfile:
         json.dump(data, outfile, ensure_ascii=False, indent=2)
     
-    with open('C:\\Users\\renat\\TCC\\Código\\robo\\log1.json', 'w', encoding='utf8') as file:
+    with open('C:\\Users\\renat\\Desktop\\log1.json', 'a+', encoding='utf8') as file:
         file.write("Total noticias: " + str(count) + "\n")
 
-# #### Com as URLs da célula anterior será feito busca das notícias, página a página
+# Com as URLs da célula anterior será feito busca das notícias, página a página
 for n in verMais:
     print("Processando: " + str(n) + "...")
     res = BeautifulSoup(urls(n).read(),"html.parser")
@@ -111,9 +107,6 @@ for n in verMais:
     titulos = res.findAll("a", {"class": "feed-post-link gui-color-primary gui-color-hover"})
     data, count = pegaInfos(titulos, count, categoria, noticia)
     print(n + ": terminado")
-    # if p == 10:
-    #     salvaJson(data, count)
-    #     p = 1
-    # else:
-    #     p += 1
-    salvaJson(data, count)
+
+
+salvaJson(data, count)
